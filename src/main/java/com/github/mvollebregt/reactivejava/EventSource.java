@@ -1,23 +1,20 @@
 package com.github.mvollebregt.reactivejava;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * @author Michel Vollebregt
  */
 public class EventSource<T> {
 
-    private ArrayList<ListenerFunction<T>> listeners = new ArrayList<>();
-
-    public interface Function<A, B> {
-        B apply(A param);
-    }
-
-    public interface Predicate<B> extends Function<B, Boolean> {}
+    private ArrayList<Consumer<T>> listeners = new ArrayList<>();
 
     public void raise(T event) {
-        for (ListenerFunction<T> listener : listeners) {
-            listener.handleEvent(event);
+        for (Consumer<T> listener : listeners) {
+            listener.accept(event);
         }
     }
 
@@ -30,12 +27,12 @@ public class EventSource<T> {
     public EventSource<T> filter(Predicate<T> filterExpr) {
         EventSource<T> filtered = new EventSource<>();
         observe(this, x -> {
-            if (filterExpr.apply(x)) filtered.raise(x);
+            if (filterExpr.test(x)) filtered.raise(x);
         });
         return filtered;
     }
 
-    public static <T> Observer<T> observe(EventSource<T> eventSource, ListenerFunction<T> listener) {
+    public static <T> Observer<T> observe(EventSource<T> eventSource, Consumer<T> listener) {
         eventSource.listeners.add(listener);
         return new ObserverImpl<>(eventSource, listener);
     }
@@ -52,9 +49,9 @@ public class EventSource<T> {
     private static class ObserverImpl<T> implements Observer<T> {
 
         private EventSource<T> eventSource;
-        private ListenerFunction<T> listener;
+        private Consumer<T> listener;
 
-        private ObserverImpl(EventSource<T> eventSource, ListenerFunction<T> listener) {
+        private ObserverImpl(EventSource<T> eventSource, Consumer<T> listener) {
             this.eventSource = eventSource;
             this.listener = listener;
         }
