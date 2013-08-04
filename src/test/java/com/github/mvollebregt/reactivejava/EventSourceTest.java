@@ -69,15 +69,25 @@ public class EventSourceTest {
 
     @Test
     public void map_newEventsComeThrough() throws Exception {
-        // given an event source
-        EventSource<Integer> orig = new EventSource<>();
-        // and a mapped event source
-        EventSource<String> mapped = orig.map(x -> "mapped " + x);
+        // given a mapped event source
+        EventSource<String> mapped = eventSource.map(x -> "mapped " + x);
         observe(mapped, x -> out.println(x));
         // when raising an event on the original event source
-        orig.raise(3);
+        eventSource.raise(3);
         // then the mapped event source receives a mapped event
         assertEquals("mapped 3\n", printBuffer.toString("UTF-8"));
+    }
+
+    @Test
+    public void filter_onlyFilteredEventsComeThrough() throws Exception {
+        // given a filtered event source
+        EventSource<Integer> filtered = eventSource.filter(x -> (x % 2) == 0);
+        observe(filtered, x -> out.println(x));
+        // when raising two events on the original event source
+        eventSource.raise(1);
+        eventSource.raise(2);
+        // only the filtered event comes through
+        assertEquals("2\n", printBuffer.toString("UTF-8"));
     }
 
 
