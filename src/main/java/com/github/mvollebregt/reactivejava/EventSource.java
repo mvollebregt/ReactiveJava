@@ -7,33 +7,34 @@ import java.util.ArrayList;
  */
 public class EventSource<T> {
 
-    private ArrayList<Listener<T>> listeners = new ArrayList<>();
-
-    public interface Listener<T> {
-        void handleEvent(T event);
-    }
-
-    public interface Observer<T> {
-        void dispose();
-    }
+    private ArrayList<ListenerFunction<T>> listeners = new ArrayList<>();
 
     public void raise(T event) {
-        for (Listener<T> listener : listeners) {
+        for (ListenerFunction<T> listener : listeners) {
             listener.handleEvent(event);
         }
     }
 
-    public static <T> Observer<T> observe(EventSource<T> eventSource, Listener<T> listener) {
+    public static <T> Observer<T> observe(EventSource<T> eventSource, ListenerFunction<T> listener) {
         eventSource.listeners.add(listener);
         return new ObserverImpl<>(eventSource, listener);
+    }
+
+    public static <T> EventSource<T> merge(EventSource<? extends T>... ess) {
+        EventSource<T> merged = new EventSource<>();
+        for (EventSource<? extends T> original : ess) {
+            observe(original, merged::raise);
+            // TODO: make sure everything gets disposed
+        }
+        return merged;
     }
 
     private static class ObserverImpl<T> implements Observer<T> {
 
         private EventSource<T> eventSource;
-        private Listener<T> listener;
+        private ListenerFunction<T> listener;
 
-        private ObserverImpl(EventSource<T> eventSource, Listener<T> listener) {
+        private ObserverImpl(EventSource<T> eventSource, ListenerFunction<T> listener) {
             this.eventSource = eventSource;
             this.listener = listener;
         }
