@@ -1,0 +1,7 @@
+# Build output
+target
+
+# Project files
+.idea
+*.iml
+
