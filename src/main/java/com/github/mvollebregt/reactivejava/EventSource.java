@@ -9,10 +9,20 @@ public class EventSource<T> {
 
     private ArrayList<ListenerFunction<T>> listeners = new ArrayList<>();
 
+    public interface Function<A, B> {
+        B apply(A param);
+    }
+
     public void raise(T event) {
         for (ListenerFunction<T> listener : listeners) {
             listener.handleEvent(event);
         }
+    }
+
+    public <B> EventSource<B> map(Function<T, B> func) {
+        EventSource<B> mapped = new EventSource<>();
+        observe(this, x -> mapped.raise(func.apply(x)));
+        return mapped;
     }
 
     public static <T> Observer<T> observe(EventSource<T> eventSource, ListenerFunction<T> listener) {

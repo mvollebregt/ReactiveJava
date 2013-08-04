@@ -67,5 +67,18 @@ public class EventSourceTest {
         assertEquals("Event\nMoreSpecificEvent\n", printBuffer.toString("UTF-8"));
     }
 
+    @Test
+    public void map_newEventsComeThrough() throws Exception {
+        // given an event source
+        EventSource<Integer> orig = new EventSource<>();
+        // and a mapped event source
+        EventSource<String> mapped = orig.map(x -> "mapped " + x);
+        observe(mapped, x -> out.println(x));
+        // when raising an event on the original event source
+        orig.raise(3);
+        // then the mapped event source receives a mapped event
+        assertEquals("mapped 3\n", printBuffer.toString("UTF-8"));
+    }
+
 
 }
